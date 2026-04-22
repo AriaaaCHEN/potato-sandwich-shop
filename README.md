@@ -7,7 +7,7 @@
 ## 开发环境
 *   Qt 5.9.2
 *   MinGW 5.3.0 32-bit
-*   Qt Creator 4.3.x
+*   Qt Creator 4.4.1.x
 
 ## 当前状态
 项目初始化，仓库创建。
