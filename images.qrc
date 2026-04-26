@@ -14,5 +14,10 @@
         <file>images/btn_start.png</file>
         <file>images/btn_close.png</file>
         <file>images/bg_intro.jpg</file>
+        <file>images/bg_difficulty.jpg</file>
+        <file>images/btn_hard.png</file>
+        <file>images/btn_normal.png</file>
+        <file>images/btn_simple.png</file>
+        <file>images/btn_back.png</file>
     </qresource>
 </RCC>

@@ -16,11 +16,13 @@ private slots:
     void onSimpleClicked();
     void onNormalClicked();
     void onHardClicked();
+    void onBackClicked();
 
 private:
     QPushButton *simpleBtn;
     QPushButton *normalBtn;
     QPushButton *hardBtn;
+    QPushButton *backBtn;
 };
 
 #endif
