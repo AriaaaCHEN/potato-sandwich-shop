@@ -1,4 +1,4 @@
-# 吉伊卡瓦三明治店 (Potato Sandwich Shop)
+# 吉伊卡哇三明治店 (Potato Sandwich Shop)
 南开大学 2026级 C++ 大作业项目
 
 ## 项目描述
