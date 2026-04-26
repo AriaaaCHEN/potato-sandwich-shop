@@ -12,44 +12,57 @@ class GameWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    GameWindow(QWidget *parent = nullptr);
+    explicit GameWindow(int difficulty, QWidget *parent = nullptr);
     ~GameWindow();
 
 private slots:
-    void onPotatoClicked();   // 加土豆
-    void onButterClicked();   // 加黄油
-    void onMilkClicked();     // 加牛奶
-    void onBreadClicked();    // 加面包
-    void onPlateClicked();    // 加盘子
-    void onMixClicked();      // 搅拌
-    void onDiscardClicked();  // 丢弃
-    void onSubmitClicked();   // 提交
-    void updateTimer();       // 倒计时更新
+    void onPotatoClicked();
+    void onButterClicked();
+    void onMilkClicked();
+    void onBreadClicked();
+    void onLettuceClicked();   // 生菜（原来叫盘子）
+    void onMixClicked();
+    void onDiscardClicked();
+    void onSubmitClicked();
+    void updateTimer();
+    void onMenuClicked();
+    void onContinueGame();
+    void onRestartGame();
+    void onBackToLobby();
 
 private:
-    void updateBowlDisplay();  // 更新碗的显示（这一行之前缺了）
+    void updateBowlDisplay();
+    void generateNewOrder();
+    void endGame();
+    void showStarRating();
+    QPushButton*menuBtn;
+    bool isPaused;
 
-    // UI控件
+    // UI 控件
     QPushButton *potatoBtn;
     QPushButton *butterBtn;
     QPushButton *milkBtn;
     QPushButton *breadBtn;
-    QPushButton *plateBtn;
+    QPushButton *lettuceBtn;
     QPushButton *mixBtn;
     QPushButton *discardBtn;
     QPushButton *submitBtn;
 
-    QLabel *bowlLabel;        // 显示碗里的食材
-    QLabel *orderLabel;       // 显示当前订单
-    QLabel *timerLabel;       // 显示倒计时
-    QLabel *scoreLabel;       // 显示分数
+    QLabel *bowlLabel;
+    QLabel *orderLabel;
+    QLabel *timerLabel;
+    QLabel *scoreLabel;
 
-    // 游戏数据
-    QStringList currentIngredients;  // 碗里当前的食材
-    QStringList currentOrder;        // 当前订单需要的食材
-    int score;                       // 当前分数
-    int timeLeft;                    // 剩余时间
-    QTimer *timer;                   // 倒计时器
+    // 数据
+    QStringList currentIngredients;
+    QStringList currentOrder;
+    int score;
+    int completedOrders;
+    int timeLeft;
+    QTimer *timer;
+    int difficulty;
+
+    QStringList extraIngredients;   // 可选食材
 };
 
 #endif

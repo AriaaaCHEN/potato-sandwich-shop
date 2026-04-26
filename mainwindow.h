@@ -3,7 +3,6 @@
 
 #include <QMainWindow>
 #include <QPushButton>
-#include <QLabel>
 
 class MainWindow : public QMainWindow
 {
@@ -14,12 +13,11 @@ public:
     ~MainWindow();
 
 private slots:
-    void onStartClicked();
-    void onIntroClicked();
-    void onExitClicked();
+    void onStartClicked();   // 开始游戏
+    void onIntroClicked();   // 游戏简介
+    void onExitClicked();    // 退出游戏
 
 private:
-    QLabel *bgLabel;
     QPushButton *startBtn;
     QPushButton *introBtn;
     QPushButton *exitBtn;
