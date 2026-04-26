@@ -5,12 +5,16 @@
 #include <ctime>
 #include"mainwindow.h"
 #include"menuwindow.h"
+#include <QFile>
+#include <QDataStream>
+#include <QTimer>
 
 GameWindow::GameWindow(int difficulty, QWidget *parent)
     : QMainWindow(parent)
-    ,isPaused(false)
+    , isPaused(false)
     , score(0)
     , completedOrders(0)
+    , comboCount(0)
     , difficulty(difficulty)
 
 {
@@ -26,6 +30,22 @@ GameWindow::GameWindow(int difficulty, QWidget *parent)
 
     // 额外食材池（生菜代替盘子）
     extraIngredients << "黄油" << "牛奶" << "生菜";
+
+    // 读取最高分
+    QFile file("maxscore.dat");
+    if (file.open(QIODevice::ReadOnly)) {
+        QDataStream in(&file);
+        in >> maxScore;
+        file.close();
+    } else {
+        maxScore = 0;
+    }
+
+    // 反馈标签（表情）
+    feedbackLabel = new QLabel(this);
+    feedbackLabel->setGeometry(500, 80, 200, 40);
+    feedbackLabel->setStyleSheet("font-size: 20px; font-weight: bold; color: orange;");
+    feedbackLabel->clear();
 
     // ---------------- 创建控件 ----------------
     orderLabel = new QLabel(this);
@@ -142,6 +162,19 @@ void GameWindow::onSubmitClicked()
     if (match) {
         // 正确
         score += 10;
+        // 连击奖励
+        comboCount++;
+        if (comboCount >= 5) {
+            score += 10;
+            feedbackLabel->setText("🔥 超级连击 +10！");
+        } else if (comboCount >= 3) {
+            score += 5;
+            feedbackLabel->setText("⚡ 连击 +5！");
+        } else {
+            feedbackLabel->setText("😊 美味！");
+        }
+        feedbackLabel->show();
+        QTimer::singleShot(1500, feedbackLabel, &QLabel::hide);// 连击奖励
         completedOrders++;
         QMessageBox::information(this, "成功", "订单完成！+10分");
         currentIngredients.clear();
@@ -150,6 +183,10 @@ void GameWindow::onSubmitClicked()
     } else {
         // 错误
         score -= 5;
+        comboCount = 0;
+        feedbackLabel->setText("😭 做错了...");
+        feedbackLabel->show();
+        QTimer::singleShot(1500, feedbackLabel, &QLabel::hide);
         QMessageBox::warning(this, "错误", "食材不正确，订单失败！-5分");
         currentIngredients.clear();
         updateBowlDisplay();
@@ -208,6 +245,16 @@ void GameWindow::updateTimer()
 // 游戏结束
 void GameWindow::endGame()
 {
+    // 保存最高分
+    if (score > maxScore) {
+        maxScore = score;
+        QFile file("maxscore.dat");
+        if (file.open(QIODevice::WriteOnly)) {
+            QDataStream out(&file);
+            out << maxScore;
+            file.close();
+        }
+    }
     showStarRating();
     this->close();
 }
@@ -237,8 +284,8 @@ void GameWindow::showStarRating()
     else starMsg = "没有星星，下次再来吧~";
 
     QMessageBox::information(nullptr, "游戏结束",
-        QString("时间到！\n\n完成订单数：%1\n最终分数：%2\n\n%3")
-        .arg(completedOrders).arg(score).arg(starMsg));
+        QString("时间到！\n\n完成订单数：%1\n本次分数：%2\n最高分数：%3\n\n%4")
+        .arg(completedOrders).arg(score).arg(maxScore).arg(starMsg));
 }
 
 // 更新碗的显示

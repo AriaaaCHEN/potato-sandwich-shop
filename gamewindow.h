@@ -37,6 +37,9 @@ private:
     void showStarRating();
     QPushButton*menuBtn;
     bool isPaused;
+    int comboCount;
+    int maxScore;
+    QLabel*feedbackLabel;
 
     // UI 控件
     QPushButton *potatoBtn;
@@ -63,6 +66,7 @@ private:
     int difficulty;
 
     QStringList extraIngredients;   // 可选食材
+
 };
 
 #endif
