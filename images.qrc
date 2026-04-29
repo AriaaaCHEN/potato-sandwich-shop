@@ -1,13 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>images/bread.jpg</file>
-        <file>images/but+bowl.jpg</file>
-        <file>images/butter.jpg</file>
-        <file>images/emptybowl.jpg</file>
-        <file>images/milk.jpg</file>
-        <file>images/plate.jpg</file>
-        <file>images/potato.jpg</file>
-        <file>images/potatosalad.jpg</file>
         <file>images/bg_start.jpg</file>
         <file>images/btn_exit.png</file>
         <file>images/btn_intro.png</file>
@@ -19,5 +11,12 @@
         <file>images/btn_normal.png</file>
         <file>images/btn_simple.png</file>
         <file>images/btn_back.png</file>
+        <file>images/bg_menu.jpg</file>
+        <file>images/btn_back2.png</file>
+        <file>images/btn_continue.png</file>
+        <file>images/btn_restart.png</file>
+        <file>images/bg_game.jpg</file>
+        <file>images/btn_discard.png</file>
+        <file>images/btn_mix.png</file>
     </qresource>
 </RCC>

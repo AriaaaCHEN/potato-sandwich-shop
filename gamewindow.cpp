@@ -3,11 +3,13 @@
 #include <QTime>
 #include <cstdlib>
 #include <ctime>
-#include"mainwindow.h"
-#include"menuwindow.h"
+#include "mainwindow.h"
+#include "menuwindow.h"
 #include <QFile>
 #include <QDataStream>
 #include <QTimer>
+#include <QLabel>
+#include <QPixmap>
 
 GameWindow::GameWindow(int difficulty, QWidget *parent)
     : QMainWindow(parent)
@@ -15,21 +17,21 @@ GameWindow::GameWindow(int difficulty, QWidget *parent)
     , score(0)
     , completedOrders(0)
     , comboCount(0)
+    , timeLeft(0)
+    , maxScore(0)
     , difficulty(difficulty)
 
+
 {
-    // 随机种子
-    std::srand(static_cast<unsigned>(QTime::currentTime().msec()));
+    setFixedSize(1054, 768);
 
-    // 根据难度设置倒计时总秒数
-    if (difficulty == 1) timeLeft = 60;
-    else if (difficulty == 2) timeLeft = 60;
-    else timeLeft = 60;
-
-    setFixedSize(800, 600);
-
-    // 额外食材池（生菜代替盘子）
-    extraIngredients << "黄油" << "牛奶" << "生菜";
+    // 背景图
+    QPixmap bg(":/images/bg_game.jpg");
+    bg = bg.scaled(1054, 768, Qt::KeepAspectRatioByExpanding);
+    QLabel *bgLabel = new QLabel(this);
+    bgLabel->setPixmap(bg);
+    bgLabel->setGeometry(0, 0, 1054, 768);
+    bgLabel->lower();
 
     // 读取最高分
     QFile file("maxscore.dat");
@@ -41,6 +43,31 @@ GameWindow::GameWindow(int difficulty, QWidget *parent)
         maxScore = 0;
     }
 
+    // 最高分标签
+    maxScoreLabel = new QLabel(this);
+    maxScoreLabel->setGeometry(495, 703, 300, 50);
+    maxScoreLabel->setStyleSheet(
+        "font-size: 32px;"
+        "font-weight: bold;"
+        "color: #D9534F;"
+        "background: transparent;"
+        "font-family: 'Courier New', monospace;"
+    );
+    maxScoreLabel->setText("最高纪录：" + QString::number(maxScore));
+
+    // 随机种子
+    std::srand(static_cast<unsigned>(QTime::currentTime().msec()));
+
+    // 根据难度设置倒计时总秒数
+    if (difficulty == 1) timeLeft = 60;
+    else if (difficulty == 2) timeLeft = 60;
+    else timeLeft = 60;
+
+
+    // 额外食材池
+    extraIngredients << "黄油" << "牛奶" << "生菜" <<"鸡腿排";
+
+
     // 反馈标签（表情）
     feedbackLabel = new QLabel(this);
     feedbackLabel->setGeometry(500, 80, 200, 40);
@@ -48,50 +75,114 @@ GameWindow::GameWindow(int difficulty, QWidget *parent)
     feedbackLabel->clear();
 
     // ---------------- 创建控件 ----------------
-    orderLabel = new QLabel(this);
-    orderLabel->setGeometry(50, 30, 300, 40);
-    orderLabel->setStyleSheet("font-size: 16px; border: 2px solid gray; padding: 5px;");
+    // 订单序号标签（左上角）
+    serialLabel = new QLabel(this);
+    serialLabel->setGeometry(65, 38, 120, 50);
+    serialLabel->setStyleSheet(
+        "font-size: 32px;"
+        "font-weight: bold;"
+        "color: #D9534F;"
+        "background: transparent;"
+        "font-family: 'Courier New', monospace;"
+    );
+    serialLabel->setAlignment(Qt::AlignCenter);
+    serialLabel->setText("第 1 单");
 
-    timerLabel = new QLabel("倒计时：" + QString::number(timeLeft), this);
-    timerLabel->setGeometry(600, 30, 150, 40);
-    timerLabel->setStyleSheet("font-size: 16px; border: 2px solid gray; padding: 5px;");
+    // 订单内容标签（序号右侧）
+    orderContentLabel = new QLabel(this);
+    orderContentLabel->setGeometry(180, 38, 350, 50);
+    orderContentLabel->setAlignment(Qt::AlignCenter);
+    orderContentLabel->setText("土豆泥 + 面包");
 
-    scoreLabel = new QLabel("分数：" + QString::number(score) + "  订单：" + QString::number(completedOrders), this);
-    scoreLabel->setGeometry(50, 80, 280, 40);
-    scoreLabel->setStyleSheet("font-size: 16px; border: 2px solid gray; padding: 5px;");
+    // 倒计时标签（右上角，电子表样式）
+    timerLabel = new QLabel(this);
+    timerLabel->setGeometry(650, 35, 200, 60);
+    timerLabel->setStyleSheet(
+        "font-size: 36px;"
+        "font-weight: bold;"
+        "color: #D9534F;"
+        "background: transparent;"
+        "font-family: 'Courier New', monospace;"  // 马赛克风格字体
+    );
+    timerLabel->setAlignment(Qt::AlignCenter);
+    timerLabel->setText("01：00");
+
+    // 初始化序号
+    orderSerial = 1;
+    // 得分控件
+    scoreLabel = new QLabel(this);
+    scoreLabel->setGeometry(220, 703, 150, 50);
+    scoreLabel->setStyleSheet(
+        "font-size: 32px;"
+        "font-weight: bold;"
+        "color: #D9534F;"          // 和倒计时一样的红色
+        "background: transparent;"
+        "font-family: 'Courier New', monospace;"
+    );
+    scoreLabel->setText("得分：" + QString::number(score));
+
 
     // 食材按钮
-    potatoBtn = new QPushButton("🥔 土豆", this);
-    potatoBtn->setGeometry(50, 150, 120, 50);
+    potatoBtn = new QPushButton(this);
+    potatoBtn->setGeometry(60, 362, 100, 48);
+    potatoBtn->setStyleSheet("border: none; background: transparent;");
 
-    butterBtn = new QPushButton("🧈 黄油", this);
-    butterBtn->setGeometry(200, 150, 120, 50);
+    butterBtn = new QPushButton(this);
+    butterBtn->setGeometry(185, 362, 100, 48);
+    butterBtn->setStyleSheet("border: none; background: transparent;");
 
-    milkBtn = new QPushButton("🥛 牛奶", this);
-    milkBtn->setGeometry(350, 150, 120, 50);
+    milkBtn = new QPushButton(this);
+    milkBtn->setGeometry(300, 362, 90, 48);
+    milkBtn->setStyleSheet("border: none; background: transparent;");
 
-    breadBtn = new QPushButton("🍞 面包", this);
-    breadBtn->setGeometry(50, 220, 120, 50);
+    breadBtn = new QPushButton(this);
+    breadBtn->setGeometry(420, 362, 90, 48);
+    breadBtn->setStyleSheet("border: none; background: transparent;");
 
-    lettuceBtn = new QPushButton("🥬 生菜", this);
-    lettuceBtn->setGeometry(200, 220, 120, 50);
+    lettuceBtn = new QPushButton(this);
+    lettuceBtn->setGeometry(550, 362, 100, 48);
+    lettuceBtn->setStyleSheet("border: none; background: transparent;");
 
-    mixBtn = new QPushButton("🥄 搅拌", this);
-    mixBtn->setGeometry(350, 220, 120, 50);
+    chickenBtn = new QPushButton(this);
+    chickenBtn->setGeometry(680, 362, 100, 48);
+    chickenBtn->setStyleSheet("border: none; background: transparent;");
+    //搅拌
+    mixBtn = new QPushButton(this);
+    mixBtn->setIcon(QIcon(":/images/btn_mix.png"));
+    mixBtn->setIconSize(QSize(100, 50));
+    mixBtn->setFixedSize(100, 50);
+    mixBtn->setGeometry(50, 600, 100, 50);
+    mixBtn->setStyleSheet("border: none; background: transparent;");
+    mixBtn->setToolTip("搅拌");
 
     bowlLabel = new QLabel("碗里：空", this);
-    bowlLabel->setGeometry(400, 150, 300, 100);
-    bowlLabel->setStyleSheet("border: 3px solid brown; background-color: #FFF8E7; font-size: 14px; padding: 10px;");
-
-    discardBtn = new QPushButton("🗑️ 丢弃", this);
-    discardBtn->setGeometry(400, 280, 120, 50);
-
-    submitBtn = new QPushButton("✅ 提交", this);
-    submitBtn->setGeometry(580, 280, 120, 50);
+    bowlLabel->setGeometry(365, 450, 300, 180);
+    bowlLabel->setWordWrap(true);
+    bowlLabel->setStyleSheet(
+        "font-size: 24px;"
+        "font-weight: bold;"
+        "color: #D9534F;"
+        "background: transparent;"
+        "font-family: 'Courier New', monospace;"
+    );
+    bowlLabel->setAlignment(Qt::AlignCenter);
+    //丢弃按钮
+    discardBtn = new QPushButton(this);
+    discardBtn->setIcon(QIcon(":/images/btn_discard.png"));
+    discardBtn->setIconSize(QSize(50, 50));
+    discardBtn->setFixedSize(50, 50);
+    discardBtn->setGeometry(680, 580, 50, 50);
+    discardBtn->setStyleSheet("border: none; background: transparent;");
+    discardBtn->setToolTip("丢弃");
+    //提交按钮
+    submitBtn = new QPushButton(this);
+    submitBtn->setGeometry(770, 620, 250, 120);
+    submitBtn->setStyleSheet("border: none; background: transparent;");
 
     //菜单按钮（放在右上角）
-    menuBtn=new QPushButton("📋 菜单",this);
-    menuBtn->setGeometry(700,10,80,30);
+    menuBtn=new QPushButton(this);
+    menuBtn->setGeometry(932,18,93,93);
+    menuBtn->setStyleSheet("border: none; background: transparent;");
     connect(menuBtn,&QPushButton::clicked,this,&GameWindow::onMenuClicked);
 
     // 信号槽连接
@@ -103,6 +194,7 @@ GameWindow::GameWindow(int difficulty, QWidget *parent)
     connect(mixBtn, &QPushButton::clicked, this, &GameWindow::onMixClicked);
     connect(discardBtn, &QPushButton::clicked, this, &GameWindow::onDiscardClicked);
     connect(submitBtn, &QPushButton::clicked, this, &GameWindow::onSubmitClicked);
+    connect(chickenBtn, &QPushButton::clicked, this, &GameWindow::onChickenClicked);
 
     // 生成第一个订单
     generateNewOrder();
@@ -121,6 +213,7 @@ void GameWindow::onButterClicked() { currentIngredients.append("黄油"); update
 void GameWindow::onMilkClicked() { currentIngredients.append("牛奶"); updateBowlDisplay(); }
 void GameWindow::onBreadClicked() { currentIngredients.append("面包"); updateBowlDisplay(); }
 void GameWindow::onLettuceClicked() { currentIngredients.append("生菜"); updateBowlDisplay(); }
+void GameWindow::onChickenClicked(){ currentIngredients.append("鸡腿排"); updateBowlDisplay(); }
 
 // 搅拌：土豆+黄油 -> 土豆泥
 void GameWindow::onMixClicked()
@@ -180,9 +273,13 @@ void GameWindow::onSubmitClicked()
         currentIngredients.clear();
         updateBowlDisplay();
         generateNewOrder();  // 生成下一个随机订单
+        orderSerial++;
+        serialLabel->setText(QString("第 %1 单").arg(orderSerial));
+        scoreLabel->setText("得分: " + QString::number(score));
     } else {
         // 错误
         score -= 5;
+        scoreLabel->setText("得分: " + QString::number(score));
         comboCount = 0;
         feedbackLabel->setText("😭 做错了...");
         feedbackLabel->show();
@@ -191,11 +288,9 @@ void GameWindow::onSubmitClicked()
         currentIngredients.clear();
         updateBowlDisplay();
         // 不生成新订单，玩家可以重做当前订单（订单不变）
+        }
     }
 
-    // 更新显示
-    scoreLabel->setText("分数：" + QString::number(score) + "  订单：" + QString::number(completedOrders));
-}
 
 // 生成随机订单（基底：土豆泥+面包）
 void GameWindow::generateNewOrder()
@@ -209,7 +304,6 @@ void GameWindow::generateNewOrder()
     else extraCount = 2;
 
     if (extraCount > 0) {
-        // 随机打乱额外食材列表，取前 extraCount 个
         QStringList shuffled = extraIngredients;
         for (int i = 0; i < shuffled.size(); ++i) {
             int j = std::rand() % shuffled.size();
@@ -220,22 +314,61 @@ void GameWindow::generateNewOrder()
         }
     }
 
-    // 显示订单文字
-    QString orderText = "订单：";
+    // 生成订单文字
+    QString orderText = "";
     for (int i = 0; i < currentOrder.size(); ++i) {
         if (i > 0) orderText += " + ";
         orderText += currentOrder[i];
     }
-    orderLabel->setText(orderText);
+
+    // 动态调整宽度和字体大小
+    int textLen = orderText.length();
+    if (textLen > 20) {
+        orderContentLabel->setGeometry(180, 38, 520, 50);
+        orderContentLabel->setStyleSheet(
+            "font-size: 18px;"
+            "font-weight: bold;"
+            "color: #D9534F;"
+            "background: transparent;"
+            "font-family: 'Courier New', monospace;"
+        );
+    } else if (textLen > 12) {
+        orderContentLabel->setGeometry(180, 38, 450, 50);
+        orderContentLabel->setStyleSheet(
+            "font-size: 22px;"
+            "font-weight: bold;"
+            "color: #D9534F;"
+            "background: transparent;"
+            "font-family: 'Courier New', monospace;"
+        );
+    } else {
+        orderContentLabel->setGeometry(180, 38, 350, 50);
+        orderContentLabel->setStyleSheet(
+            "font-size: 28px;"
+            "font-weight: bold;"
+            "color: #D9534F;"
+            "background: transparent;"
+            "font-family: 'Courier New', monospace;"
+        );
+    }
+
+    orderContentLabel->setText(orderText);
+    orderContentLabel->setAlignment(Qt::AlignCenter);
 }
 
 // 倒计时更新
 void GameWindow::updateTimer()
 {
-    if(isPaused)return;
+    if (isPaused) return;
 
     timeLeft--;
-    timerLabel->setText("倒计时：" + QString::number(timeLeft));
+    int minutes = timeLeft / 60;
+    int seconds = timeLeft % 60;
+    QString timeStr = QString("%1:%2")
+                        .arg(minutes, 2, 10, QChar('0'))
+                        .arg(seconds, 2, 10, QChar('0'));
+    timerLabel->setText(timeStr);
+
     if (timeLeft <= 0) {
         timer->stop();
         endGame();
@@ -248,6 +381,7 @@ void GameWindow::endGame()
     // 保存最高分
     if (score > maxScore) {
         maxScore = score;
+        maxScoreLabel->setText("最高纪录：" + QString::number(maxScore));
         QFile file("maxscore.dat");
         if (file.open(QIODevice::WriteOnly)) {
             QDataStream out(&file);
@@ -256,7 +390,10 @@ void GameWindow::endGame()
         }
     }
     showStarRating();
+    // 返回开始界面（MainWindow）
     this->close();
+    MainWindow *mainWin = new MainWindow();
+    mainWin->show();
 }
 
 // 星级评价
@@ -334,10 +471,9 @@ void GameWindow::onRestartGame()
     // 重置所有数据
     isPaused = false;
 
-    // 重置分数和订单数
+    //重置得分
     score = 0;
-    completedOrders = 0;
-    scoreLabel->setText("分数：0  订单：0");
+    scoreLabel->setText("得分: " + QString::number(score));
 
     // 清空碗
     currentIngredients.clear();

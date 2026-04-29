@@ -20,7 +20,8 @@ private slots:
     void onButterClicked();
     void onMilkClicked();
     void onBreadClicked();
-    void onLettuceClicked();   // 生菜（原来叫盘子）
+    void onLettuceClicked();
+    void onChickenClicked();
     void onMixClicked();
     void onDiscardClicked();
     void onSubmitClicked();
@@ -35,11 +36,12 @@ private:
     void generateNewOrder();
     void endGame();
     void showStarRating();
-    QPushButton*menuBtn;
+
     bool isPaused;
     int comboCount;
     int maxScore;
-    QLabel*feedbackLabel;
+
+    int orderSerial;
 
     // UI 控件
     QPushButton *potatoBtn;
@@ -47,14 +49,19 @@ private:
     QPushButton *milkBtn;
     QPushButton *breadBtn;
     QPushButton *lettuceBtn;
+    QPushButton *chickenBtn;
     QPushButton *mixBtn;
     QPushButton *discardBtn;
     QPushButton *submitBtn;
+    QPushButton *menuBtn;
 
     QLabel *bowlLabel;
-    QLabel *orderLabel;
     QLabel *timerLabel;
     QLabel *scoreLabel;
+    QLabel *serialLabel;
+    QLabel *orderContentLabel;
+    QLabel *feedbackLabel;
+    QLabel *maxScoreLabel;
 
     // 数据
     QStringList currentIngredients;

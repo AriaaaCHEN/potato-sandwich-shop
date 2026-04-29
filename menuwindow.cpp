@@ -1,33 +1,47 @@
 #include "menuwindow.h"
-#include <QVBoxLayout>
+#include <QLabel>
+#include <QPixmap>
 
 MenuWindow::MenuWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    setFixedSize(400, 300);
+    setFixedSize(450, 450);
     setWindowTitle("游戏菜单");
 
-    // 创建一个中心控件和布局
-    QWidget *central = new QWidget(this);
-    setCentralWidget(central);
-    QVBoxLayout *layout = new QVBoxLayout(central);
+    // ========== 背景图 ==========
+    QPixmap bg(":/images/bg_menu.jpg");
+    bg = bg.scaled(450, 450, Qt::KeepAspectRatioByExpanding);
+    QLabel *bgLabel = new QLabel(this);
+    bgLabel->setPixmap(bg);
+    bgLabel->setGeometry(0, 0, 450, 450);
+    bgLabel->lower();
 
-    // 创建三个按钮
-    continueBtn = new QPushButton("继续游戏", this);
-    restartBtn = new QPushButton("重新开始", this);
-    backBtn = new QPushButton("返回大厅", this);
-
-    // 设置按钮大小
+    // ========== 三个图片按钮 ==========
+    // 继续游戏按钮
+    continueBtn = new QPushButton(this);
+    continueBtn->setIcon(QIcon(":/images/btn_continue.png"));
+    continueBtn->setIconSize(QSize(200, 50));
     continueBtn->setFixedSize(200, 50);
+    continueBtn->setGeometry(125, 120, 200, 50);
+    continueBtn->setStyleSheet("border: none; background: transparent;");
+
+    // 重新开始按钮
+    restartBtn = new QPushButton(this);
+    restartBtn->setIcon(QIcon(":/images/btn_restart.png"));
+    restartBtn->setIconSize(QSize(200, 50));
     restartBtn->setFixedSize(200, 50);
+    restartBtn->setGeometry(125, 200, 200, 50);
+    restartBtn->setStyleSheet("border: none; background: transparent;");
+
+    // 返回大厅按钮
+    backBtn = new QPushButton(this);
+    backBtn->setIcon(QIcon(":/images/btn_back2.png"));
+    backBtn->setIconSize(QSize(200, 50));
     backBtn->setFixedSize(200, 50);
+    backBtn->setGeometry(125, 280, 200, 50);
+    backBtn->setStyleSheet("border: none; background: transparent;");
 
-    // 添加到布局并居中
-    layout->addWidget(continueBtn, 0, Qt::AlignCenter);
-    layout->addWidget(restartBtn, 0, Qt::AlignCenter);
-    layout->addWidget(backBtn, 0, Qt::AlignCenter);
-
-    // 连接信号槽
+    // ========== 信号槽连接 ==========
     connect(continueBtn, &QPushButton::clicked, this, &MenuWindow::onContinueClicked);
     connect(restartBtn, &QPushButton::clicked, this, &MenuWindow::onRestartClicked);
     connect(backBtn, &QPushButton::clicked, this, &MenuWindow::onBackClicked);
@@ -37,8 +51,8 @@ MenuWindow::~MenuWindow() {}
 
 void MenuWindow::onContinueClicked()
 {
-    emit continueGame();  // 发射信号
-    this->close();        // 关闭菜单窗口
+    emit continueGame();
+    this->close();
 }
 
 void MenuWindow::onRestartClicked()
