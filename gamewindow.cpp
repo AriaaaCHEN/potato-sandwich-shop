@@ -33,17 +33,7 @@ GameWindow::GameWindow(int difficulty, QWidget *parent)
     bgLabel->setGeometry(0, 0, 1054, 768);
     bgLabel->lower();
 
-    // 读取最高分
-    QFile file("maxscore.dat");
-    if (file.open(QIODevice::ReadOnly)) {
-        QDataStream in(&file);
-        in >> maxScore;
-        file.close();
-    } else {
-        maxScore = 0;
-    }
-
-    // 最高分标签
+    // 创建最高分标签
     maxScoreLabel = new QLabel(this);
     maxScoreLabel->setGeometry(495, 703, 300, 50);
     maxScoreLabel->setStyleSheet(
@@ -53,6 +43,17 @@ GameWindow::GameWindow(int difficulty, QWidget *parent)
         "background: transparent;"
         "font-family: 'Courier New', monospace;"
     );
+
+    // 读取最高分
+    QString maxScoreFile = getMaxScoreFilePath();
+    QFile file(maxScoreFile);
+    if (file.open(QIODevice::ReadOnly)) {
+        QDataStream in(&file);
+        in >> maxScore;
+        file.close();
+    } else {
+        maxScore = 0;
+    }
     maxScoreLabel->setText("最高纪录：" + QString::number(maxScore));
 
     // 随机种子
@@ -223,9 +224,9 @@ void GameWindow::onMixClicked()
         currentIngredients.removeAll("黄油");
         currentIngredients.append("土豆泥");
         updateBowlDisplay();
-        QMessageBox::information(this, "搅拌", "搅拌成功！得到土豆泥。");
+        showToastImage(":/images/toast_mud_success.png");
     } else {
-        QMessageBox::warning(this, "搅拌", "需要土豆和黄油才能搅拌成土豆泥！");
+        showToastImage(":/images/toast_mix_fail.png");
     }
 }
 
@@ -233,7 +234,7 @@ void GameWindow::onDiscardClicked()
 {
     currentIngredients.clear();
     updateBowlDisplay();
-    QMessageBox::information(this, "丢弃", "已清空碗里的食材");
+    showToastImage(":/images/toast_discard.png");
 }
 
 // 提交订单
@@ -259,17 +260,14 @@ void GameWindow::onSubmitClicked()
         comboCount++;
         if (comboCount >= 5) {
             score += 10;
-            feedbackLabel->setText("🔥 超级连击 +10！");
+            showToastImage(":/images/feedback_combo5.png");
         } else if (comboCount >= 3) {
             score += 5;
-            feedbackLabel->setText("⚡ 连击 +5！");
+            showToastImage(":/images/feedback_combo3.png");
         } else {
-            feedbackLabel->setText("😊 美味！");
+            showToastImage(":/images/feedback_yummy.png");
         }
-        feedbackLabel->show();
-        QTimer::singleShot(1500, feedbackLabel, &QLabel::hide);// 连击奖励
         completedOrders++;
-        QMessageBox::information(this, "成功", "订单完成！+10分");
         currentIngredients.clear();
         updateBowlDisplay();
         generateNewOrder();  // 生成下一个随机订单
@@ -281,10 +279,7 @@ void GameWindow::onSubmitClicked()
         score -= 5;
         scoreLabel->setText("得分: " + QString::number(score));
         comboCount = 0;
-        feedbackLabel->setText("😭 做错了...");
-        feedbackLabel->show();
-        QTimer::singleShot(1500, feedbackLabel, &QLabel::hide);
-        QMessageBox::warning(this, "错误", "食材不正确，订单失败！-5分");
+        showToastImage(":/images/feedback_wrong.png");
         currentIngredients.clear();
         updateBowlDisplay();
         // 不生成新订单，玩家可以重做当前订单（订单不变）
@@ -378,11 +373,12 @@ void GameWindow::updateTimer()
 // 游戏结束
 void GameWindow::endGame()
 {
-    // 保存最高分
+    // 保存当前难度的最高分
     if (score > maxScore) {
         maxScore = score;
         maxScoreLabel->setText("最高纪录：" + QString::number(maxScore));
-        QFile file("maxscore.dat");
+        QString maxScoreFile = getMaxScoreFilePath();
+        QFile file(maxScoreFile);
         if (file.open(QIODevice::WriteOnly)) {
             QDataStream out(&file);
             out << maxScore;
@@ -468,28 +464,47 @@ void GameWindow::onContinueGame()
 
 void GameWindow::onRestartGame()
 {
-    // 重置所有数据
+    // 恢复暂停状态
     isPaused = false;
 
-    //重置得分
+    // 重置得分
     score = 0;
     scoreLabel->setText("得分: " + QString::number(score));
+
+    // 重置连击
+    comboCount = 0;
+
+    // 重置完成订单数
+    completedOrders = 0;
 
     // 清空碗
     currentIngredients.clear();
     updateBowlDisplay();
 
-    // 重置时间
-    if (difficulty == 1) timeLeft = 30;   // 你自己设的时长
-    else if (difficulty == 2) timeLeft = 25;
-    else timeLeft = 20;
-    timerLabel->setText("倒计时：" + QString::number(timeLeft));
+    // 重置时间（根据当前难度）
+    if (difficulty == 1) timeLeft = 60;      // 简单 60 秒
+    else if (difficulty == 2) timeLeft = 60; // 普通 60 秒
+    else timeLeft = 60;                      // 困难 60 秒
 
-    // 重新生成订单
+    // 更新时间显示（格式 mm:ss）
+    int minutes = timeLeft / 60;
+    int seconds = timeLeft % 60;
+    QString timeStr = QString("%1:%2")
+                        .arg(minutes, 2, 10, QChar('0'))
+                        .arg(seconds, 2, 10, QChar('0'));
+    timerLabel->setText(timeStr);
+
+    // 重新生成订单（第一个订单）
     generateNewOrder();
 
-    // 重启计时器
-    timer->start(1000);
+    // 重置订单序号
+    orderSerial = 1;
+    serialLabel->setText(QString("第 %1 单").arg(orderSerial));
+
+    // 重启计时器（如果之前停止了）
+    if (!timer->isActive()) {
+        timer->start(1000);
+    }
 }
 
 void GameWindow::onBackToLobby()
@@ -500,4 +515,25 @@ void GameWindow::onBackToLobby()
     // 重新打开难度选择窗口（MainWindow 已经有一个，先关闭旧的？这里简化：直接开新的）
     MainWindow *mainWin = new MainWindow();
     mainWin->show();
+}
+
+void GameWindow::showToastImage(const QString &imagePath)
+{
+    QLabel *toast = new QLabel(this);
+    QPixmap pix(imagePath);
+    toast->setPixmap(pix.scaled(250, 180, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    toast->setGeometry(400, 100, 250, 180);  // 窗口中央偏上
+    toast->setStyleSheet("background: transparent;");
+    toast->raise();  // 放到最前面
+    toast->show();
+
+    // 1.5 秒后自动删除
+    QTimer::singleShot(1500, toast, &QLabel::deleteLater);
+}
+
+QString GameWindow::getMaxScoreFilePath()
+{
+    if (difficulty == 1) return "maxscore_easy.dat";
+    else if (difficulty == 2) return "maxscore_normal.dat";
+    else return "maxscore_hard.dat";
 }

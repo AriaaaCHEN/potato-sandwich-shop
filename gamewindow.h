@@ -6,6 +6,7 @@
 #include <QLabel>
 #include <QTimer>
 #include <QStringList>
+#include <QPixmap>
 
 class GameWindow : public QMainWindow
 {
@@ -36,6 +37,7 @@ private:
     void generateNewOrder();
     void endGame();
     void showStarRating();
+    void showToastImage(const QString &imagePath);
 
     bool isPaused;
     int comboCount;
@@ -73,6 +75,7 @@ private:
     int difficulty;
 
     QStringList extraIngredients;   // 可选食材
+    QString getMaxScoreFilePath();  // 根据难度获取最高分文件路径
 
 };
 
